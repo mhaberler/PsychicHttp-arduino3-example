@@ -21,6 +21,7 @@
 #include <esp_sntp.h>
 #include <PsychicHttp.h>
 #include <PsychicHttpsServer.h> //uncomment this to enable HTTPS / SSL
+#include "Esp.h"
 
 #ifndef WIFI_SSID
   #error "You need to enter your wifi credentials. Rename secret.h to _secret.h and enter your credentials there."
@@ -166,7 +167,6 @@ void setup()
   {
     //Setup our NTP to get the current time.
     sntp_set_time_sync_notification_cb(timeAvailable);
-    // sntp_servermode_dhcp(1); 
     esp_sntp_servermode_dhcp(true); 
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
@@ -344,7 +344,9 @@ void setup()
       output["msg"] = "status";
       output["status"] = "success";
       output["millis"] = millis();
-
+      output["freeHeap"] = ESP.getFreeHeap();
+      output["usedPSRam"] = ESP.getPsramSize() - ESP.getFreePsram();
+      
       //work with some params
       if (request->hasParam("foo"))
       {
