@@ -1,6 +1,11 @@
 name: PlatformIO build
 
-on: [push,workflow_dispatch]
+on: 
+  workflow_dispatch:
+
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers the workflow on version tags
 
 jobs:
   build:
@@ -27,12 +32,46 @@ jobs:
       - name: Build arduin3/devkitc
         run: |
           pio run -e arduino3
-          mv .pio/build/arduino3/firmware.bin devkitc.bin
 
-      - name: Upload devkitc artifacts
+      - name: Upload firmware as artifact
         uses: actions/upload-artifact@v3
-
         with:
-          name: devkitc.bin
-          path: devkitc.bin
+          name: firmware
+          path: .pio/build/*/*.bin
 
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Download firmware artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: firmware
+        path: ./firmware
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Release of firmware built from commit ${{ github.sha }}.
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./firmware/*.bin
+        asset_name: firmware-${{ github.ref }}.bin
+        asset_content_type: application/octet-stream
