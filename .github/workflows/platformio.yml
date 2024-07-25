@@ -1,0 +1,60 @@
+name: PlatformIO CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        platform: [espressif32]  # You can add more platforms if needed
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'  # Specify the Python version you need
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+
+    - name: Cache PlatformIO packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio/packages
+        key: ${{ runner.os }}-platformio-packages-${{ hashFiles('**/platformio.ini') }}
+        restore-keys: |
+          ${{ runner.os }}-platformio-packages-
+
+    - name: Cache PlatformIO cores
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio/platforms
+        key: ${{ runner.os }}-platformio-platforms-${{ hashFiles('**/platformio.ini') }}
+        restore-keys: |
+          ${{ runner.os }}-platformio-platforms-
+
+    - name: Cache PlatformIO libraries
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio/lib
+        key: ${{ runner.os }}-platformio-libraries-${{ hashFiles('**/platformio.ini') }}
+        restore-keys: |
+          ${{ runner.os }}-platformio-libraries-
+
+    - name: PlatformIO Build
+      run: pio run --environment ${matrix.platform}
