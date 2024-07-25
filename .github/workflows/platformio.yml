@@ -43,7 +43,6 @@ jobs:
           name: firmware
           path: .pio/build/*/*.bin
 
-
   release:
     needs: build
     runs-on: ubuntu-latest
