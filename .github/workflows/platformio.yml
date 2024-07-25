@@ -31,6 +31,7 @@ jobs:
 
       - name: Upload devkitc artifacts
         uses: actions/upload-artifact@v3
+
         with:
           name: devkitc.bin
           path: devkitc.bin
