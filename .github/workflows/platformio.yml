@@ -1,60 +1,37 @@
-name: PlatformIO CI
+name: PlatformIO build
 
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
+on: [push,workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
     strategy:
+      fail-fast: false
       matrix:
-        platform: [espressif32]  # You can add more platforms if needed
-
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'  # Specify the Python version you need
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
 
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install platformio
+      - name: Build arduin3/devkitc
+        run: |
+          pio run -e arduino3
+          mv .pio/build/arduino3/firmware.bin devkitc.bin
 
-    - name: Cache PlatformIO packages
-      uses: actions/cache@v2
-      with:
-        path: ~/.platformio/packages
-        key: ${{ runner.os }}-platformio-packages-${{ hashFiles('**/platformio.ini') }}
-        restore-keys: |
-          ${{ runner.os }}-platformio-packages-
+      - name: Upload devkitc artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: devkitc.bin
+          path: devkitc.bin
 
-    - name: Cache PlatformIO cores
-      uses: actions/cache@v2
-      with:
-        path: ~/.platformio/platforms
-        key: ${{ runner.os }}-platformio-platforms-${{ hashFiles('**/platformio.ini') }}
-        restore-keys: |
-          ${{ runner.os }}-platformio-platforms-
-
-    - name: Cache PlatformIO libraries
-      uses: actions/cache@v2
-      with:
-        path: ~/.platformio/lib
-        key: ${{ runner.os }}-platformio-libraries-${{ hashFiles('**/platformio.ini') }}
-        restore-keys: |
-          ${{ runner.os }}-platformio-libraries-
-
-    - name: PlatformIO Build
-      run: pio run --environment ${matrix.platform}
