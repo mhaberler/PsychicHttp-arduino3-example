@@ -37,12 +37,11 @@ jobs:
         run: |
           pio run -e arduino3
 
-      - name: Upload firmware as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: firmware
-          path: .pio/build/*/*.bin
-
+    - name: Upload firmware as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware
+        path: .pio/build/*/*.bin
 
   release:
     needs: build
