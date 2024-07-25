@@ -31,6 +31,9 @@ jobs:
 
       - name: Upload devkitc artifacts
         uses: actions/upload-artifact@v3
+        #retention-days: 1
+        overwrite: true
+
         with:
           name: devkitc.bin
           path: devkitc.bin
