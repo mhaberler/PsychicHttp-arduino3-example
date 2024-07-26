@@ -20,7 +20,9 @@
 #include <ESPmDNS.h>
 #include <esp_sntp.h>
 #include <PsychicHttp.h>
+#if CONFIG_ESP_HTTPS_SERVER_ENABLE
 #include <PsychicHttpsServer.h> //uncomment this to enable HTTPS / SSL
+#endif
 #include "Esp.h"
 #ifdef SVELTE_ESP32
 #include "svelteesp32.h"
@@ -47,14 +49,14 @@ const char *app_name = "Your App";
 const char *local_hostname = "psychic";
 
 // #define PSY_ENABLE_SSL
-#ifdef PSY_ENABLE_SSL
+#ifdef CONFIG_ESP_HTTPS_SERVER_ENABLE
   bool app_enable_ssl = true;
   String server_cert;
   String server_key;
 #endif
 
 //our main server object
-#ifdef PSY_ENABLE_SSL
+#ifdef CONFIG_ESP_HTTPS_SERVER_ENABLE
   PsychicHttpsServer server;
 #else
   PsychicHttpServer server;
@@ -186,7 +188,7 @@ void setup()
     }
 
     //look up our keys?
-    #ifdef PSY_ENABLE_SSL
+    #if CONFIG_ESP_HTTPS_SERVER_ENABLE
       if (app_enable_ssl)
       {
         File fp = LittleFS.open("/server.crt");
@@ -224,7 +226,7 @@ void setup()
     //setup server config stuff here
     server.config.max_uri_handlers = 20; //maximum number of uri handlers (.on() calls)
 
-    #ifdef PSY_ENABLE_SSL
+    #if CONFIG_ESP_HTTPS_SERVER_ENABLE
       server.ssl_config.httpd.max_uri_handlers = 20; //maximum number of uri handlers (.on() calls)
 
       //do we want secure or not?
