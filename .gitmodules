@@ -1,6 +1,3 @@
 [submodule "svelteesp32"]
 	path = svelteesp32
 	url = https://github.com/mhaberler/svelteesp32.git
-[submodule "lib/PsychicWebSocketProxy"]
-	path = lib/PsychicWebSocketProxy
-	url = https://github.com/mhaberler/PsychicWebSocketProxy.git
