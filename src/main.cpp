@@ -11,15 +11,15 @@
 #include <PsychicWebSocketProxy.h>
 
 #if __has_include("config.h")
-#include "config.h"
+    #include "config.h"
 #endif
 
 #ifndef WIFI_SSID
-#define WIFI_SSID "WiFi SSID"
+    #define WIFI_SSID "WiFi SSID"
 #endif
 
 #ifndef WIFI_PASSWORD
-#define WIFI_PASSWORD "password"
+    #define WIFI_PASSWORD "password"
 #endif
 
 // define a PsychicWebSocketProxy::Server object, which will connect
@@ -35,6 +35,8 @@ String server_cert;
 String server_key;
 PsychicHttpsServer server;
 
+unsigned long lastUpdate = 0;
+
 void setup() {
     // Setup serial
     Serial.begin(115200);
@@ -43,7 +45,9 @@ void setup() {
     Serial.printf("Connecting to WiFi %s\n", WIFI_SSID);
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASS);
-    while (WiFi.status() != WL_CONNECTED) { delay(1000); }
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+    }
     Serial.printf("WiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
 
     MDNS.begin("picomqtt");
@@ -85,5 +89,16 @@ void setup() {
 }
 
 void loop() {
+    if (millis() - lastUpdate > 2000) {
+        //create a response object
+        JsonDocument output;
+
+        output["freeHeap"] = ESP.getFreeHeap();
+        output["usedPSRam"] = ESP.getPsramSize() - ESP.getFreePsram();
+        auto publish = mqtt.begin_publish("memory", measureJson(output));
+        serializeJson(output, publish);
+        publish.send();
+        lastUpdate = millis();
+    }
     mqtt.loop();
 }
