@@ -9,6 +9,7 @@
 #include <PicoMQTT.h>
 #include <PsychicHttpsServer.h>
 #include <PsychicWebSocketProxy.h>
+#include <PicoSettings.h>
 
 #if __has_include("config.h")
     #include "config.h"
@@ -37,6 +38,27 @@ PsychicHttpsServer server;
 
 unsigned long lastUpdate = 0;
 
+PicoSettings settings(mqtt, "testns");
+
+PicoSettings::Setting<String> ssid(settings, "ssid", "some-SSID");
+PicoSettings::Setting<String> password(settings, "pass", "secret");
+
+PicoSettings::Setting<int> bar(settings, "bar", 42);
+PicoSettings::Setting<String> baz(settings, "baz", "The Answer.");
+PicoSettings::Setting<double> dzero(settings, "dzero", 0.0);
+PicoSettings::Setting<double> dparam(settings, "dparam", PI);
+void on_fparam_change(void);
+PicoSettings::Setting<float> fparam(settings, "fparam", 2.71828182845904523536, on_fparam_change);
+PicoSettings::Setting<bool> flag(settings, "flag", true, [] {
+    log_i("flag=%d", flag.get());
+});
+
+// value change callback
+void on_fparam_change(void) {
+    log_i("fparam changed to %f, default value: %f",
+          fparam.get(), fparam.get_default());
+}
+
 void setup() {
     // Setup serial
     Serial.begin(115200);
@@ -49,6 +71,7 @@ void setup() {
         delay(1000);
     }
     Serial.printf("WiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
+    settings.begin();
 
     MDNS.begin("picomqtt");
 
@@ -86,6 +109,11 @@ void setup() {
     });
 
     mqtt.begin();
+
+    settings.publish();
+    bar.change_callback = [] {
+        log_i("bar changed to %d", bar.get());
+    };
 }
 
 void loop() {
@@ -98,6 +126,9 @@ void loop() {
         auto publish = mqtt.begin_publish("memory", measureJson(output));
         serializeJson(output, publish);
         publish.send();
+
+        settings.publish();
+
         lastUpdate = millis();
     }
     mqtt.loop();
