@@ -1,5 +1,5 @@
 // dependencies: mlesniew/PicoMQTT hoeken/PsychicHTTP
-// platform: espressif32@6.6.0
+// platform: pioarduino 3.1.0
 // filesystem: littlefs
 #include <Arduino.h>
 #include <ESPmDNS.h>
